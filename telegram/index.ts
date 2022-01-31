@@ -79,6 +79,7 @@ const db = getDatabase(app);
       const id = queue.pop();
       if (await client.sendMessage(id, { message })) {
         set(ref(db, `telegram/logs/${id}`), true);
+        console.log('Message sent to', id);
       }
     } else {
       console.log('Queue is empty. Skipping');
