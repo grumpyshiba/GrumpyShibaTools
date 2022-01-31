@@ -53,19 +53,23 @@ const db = getDatabase(app);
   const chatIds = (await get(ref(db, 'telegram/chatIds'))).val();
 
   for(const chatId of chatIds) {
-    const info = await client.invoke(new Api.channels.GetFullChannel({ channel: chatId, }));
-    const result = await client.getParticipants(chatId, { limit: (info.fullChat as any).participantsCount });
-    const logs = (await get(ref(db, `telegram/logs`))).val() || {};
+    try {
+      const info = await client.invoke(new Api.channels.GetFullChannel({ channel: chatId, }));
+      const result = await client.getParticipants(chatId, { limit: (info.fullChat as any).participantsCount });
+      const logs = (await get(ref(db, `telegram/logs`))).val() || {};
 
-    queue.push(...(result.filter(({ id, username, firstName, lastName }) => {
-      if (exclusions.fullName.includes(String(`${firstName} ${lastName}`).trim()) || exclusions.username.includes(username as string)) {
-        return false;
-      }
-      return !logs[id.toString()];
-    }).map(({ id, username, firstName, lastName }) => {
-      console.log('Discovered', id.toString(), username, firstName, lastName);
-      return id;
-    })));
+      queue.push(...(result.filter(({ id, username, firstName, lastName }) => {
+        if (exclusions.fullName.includes(String(`${firstName} ${lastName}`).trim()) || exclusions.username.includes(username as string)) {
+          return false;
+        }
+        return !logs[id.toString()];
+      }).map(({ id, username, firstName, lastName }) => {
+        console.log('Discovered', id.toString(), username, firstName, lastName);
+        return id;
+      })));
+    } catch(e) {
+      console.error('Unable to fetch participants', chatId, e);
+    }
   }
 
   const message = fs.readFileSync('./message.txt').toString('utf8');
