@@ -58,7 +58,7 @@ const db = getDatabase(app);
     const logs = (await get(ref(db, `telegram/logs`))).val() || {};
 
     queue.push(...(result.filter(({ id, username, firstName, lastName }) => {
-      if (exclusions.fullName.includes(`${firstName} ${lastName}`) || exclusions.username.includes(username as string)) {
+      if (exclusions.fullName.includes(String(`${firstName} ${lastName}`).trim()) || exclusions.username.includes(username as string)) {
         return false;
       }
       return !logs[id.toString()];
