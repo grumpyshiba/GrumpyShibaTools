@@ -74,17 +74,20 @@ const db = getDatabase(app);
 
   const message = fs.readFileSync('./message.txt').toString('utf8');
 
-  setInterval(async () => {
+  const sendMesage = async () => {
     if (queue.length > 0) {
       const id = queue.pop();
       if (await client.sendMessage(id, { message })) {
         set(ref(db, `telegram/logs/${id}`), true);
         console.log('Message sent to', id);
       }
+      setTimeout(sendMesage, parseInt(process.env.SEND_TIMEOUT as string));
     } else {
       console.log('Queue is empty. Skipping');
     }
-  }, parseInt(process.env.SEND_TIMEOUT as string));
+  };
+
+  await sendMesage();
 
   console.log('You should now be connected.');
   console.log(client.session.save());
