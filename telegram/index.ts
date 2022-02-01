@@ -53,10 +53,7 @@ const connect = async () => {
 
     for(const chatId of chatIds) {
       try {
-        const info = await client.invoke(new Api.channels.GetFullChannel({ channel: chatId, })) as unknown as { participantsCount: number };
-        const result = await client.getParticipants(chatId, { limit: info.participantsCount });
-        
-        console.log('Fetched', result.length, 'members of', chatId);
+        const result = await client.getParticipants(chatId, {});
 
         const logs = (await get(ref(db, `telegram/logs`))).val() || {};
 
@@ -88,7 +85,6 @@ const connect = async () => {
         try {
           if (id && await client.sendMessage(id, { message })) {
             await set(ref(db, `telegram/logs/${id}`), true);
-            sentQty++;
             console.log('Message sent to', id);
           }
         } catch(e) {
@@ -99,6 +95,7 @@ const connect = async () => {
         const timeout = SEND_TIMEOUT + (SEND_TIMEOUT * SEND_THRESHOLD * sentQty);
         console.log('Next will be sent in', timeout);
         setTimeout(dequeue, timeout);
+        sentQty++;
       } else {
         console.log('Queue is empty. Skipping');
       }
